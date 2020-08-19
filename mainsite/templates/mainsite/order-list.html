@@ -1,0 +1,36 @@
+{% extends 'mainsite/base_template.html' %}
+{% block title %}Order{% endblock %}
+
+{% block content %}
+<h1>{{ user.username|capfirst }} orders</h1>
+<div class="col-8 m-auto">
+    {% if orders_list == 'empty' %}
+    <h1 class="alert alert-danger text-center">You don't have any orders! <br><span class="text-muted h5">Go and buy something </span></h1>
+    {% else %}
+    <table class="table border-bottom table-hover">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">Order ID</th>
+            <th scope="col">Price</th>
+            <th scope="col">Date</th>
+            <th scope="col">Status</th>
+            <th scope="col">Options</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for product in orders_list %}
+          <tr>
+            <th scope="row">{{ product.main_order.id }}</th>
+            <td>{{ product.main_order.order_cost }} zł</td>
+            <td>{{ product.main_order.order_date|date:"d-m-Y H:i" }}</td>
+            <td>{{ product.main_order.order_status }}</td>
+            <!-- <td>{% for names in product.ordered_products %}{{ names }} {% endfor %}</td> -->
+            <td><a href="#"><button class="btn btn-warning btn-sm" disabled>Download PDF</button></a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+
+    {% endif %}
+</div>
+{% endblock %}

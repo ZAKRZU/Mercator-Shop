@@ -1,0 +1,20 @@
+{% extends 'mainsite/base_template.html' %}
+{% block title %}Order{% endblock %}
+
+{% block content %}
+<h1>Account Addresses</h1>
+<div class="col-6 m-auto">
+    <ul>
+        {% for address in customer_addresses %}
+        <li>{{ address.city }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+
+{% block script-bottom %}
+<script>
+    window.onload = function() {
+    }
+</script>
+{% endblock %}

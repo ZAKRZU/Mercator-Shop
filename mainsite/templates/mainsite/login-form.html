@@ -1,0 +1,41 @@
+{% extends 'mainsite/base_template.html' %}
+{% block title %}Login{% endblock %}
+{% block content %}
+                <div class="col-6 mx-auto">
+                    {% if login_error == 'acc_badnameorpassword' %}
+                    <p class="alert alert-danger">
+                        Account with this username does not exist or password is incorrect!
+                    </p>
+                    {% elif login_error == 'logged' %}
+                    <p class="alert alert-success">
+                        You has been logged succefully
+                    </p>
+                    {% endif %}
+                    
+                    {% if can_login %}
+                    <!-- LOGIN FORM -->
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="UsernameInput">Username</label>
+                            <input type="text" name="UsernameInput" id="UsernameInput" class="form-control" required="true">
+                        </div>
+                        <div class="form-group">
+                            <label for="PasswordInput">Password</label>
+                            <input type="password" name="PasswordInput" id="PasswordInput" class="form-control" required="true">
+                        </div>
+                        <button id="RegisterButton" type="submit" class="btn btn-primary">Log-In</button>
+                    </form>
+                    <!-- LOGIN FORM -->
+                    {% elif login_error == 'authallow' %}
+                    <div class="alert alert-danger" role="alert">You are already logged as {{ req_user.username }}!</div>
+                    <form action="" method="post">
+                        {% csrf_token %}
+                        <input type="text" name="logout" hidden="true" id="" value="true">
+                        <button type="submit" class="btn btn-primary">Logout</button>
+                    </form>
+                    {% elif login_error != 'logged' %}
+                    <div class="alert alert-danger" role="alert">You can not login in this moment!</div>
+                    {% endif %}
+                </div>
+{% endblock %}

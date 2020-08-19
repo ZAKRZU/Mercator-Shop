@@ -1,0 +1,49 @@
+{% extends 'mainsite/base_template.html' %}
+{% block title %}Product{% endblock %}
+
+{% block content %}
+                <div class="col-9 mx-auto">
+                    {% if product %}
+                        {% load static %}
+                        <div class="card shadow-sm text-light bg-dark">
+                            
+                            <div class="row float-left">
+                                <div class="col-xl-8">
+                                    <img src="{% static 'mainsite/' %}{{ product.product_image }}" class="img-fluid" alt="...">
+                                </div>
+                                <div class="col-xl-4">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-xl-8">
+                                                <h5 class="card-title">{{ product.product_name }}</h5>
+                                                <h6 class="card-subtitle mb-2 text-muted">{{ product.product_price }} zł</h6>
+                                            </div>
+                                            <div class="col-xl-4">
+                                                <a href="{% url 'mainsite:cart-add' product.id %}" class="btn btn-primary float-right">Add to cart</a>                                        
+                                            </div>
+                                        </div>
+                                            <div class="row">
+                                                <div class="col-xl-12">
+                                                    <h4 class="float-right">Product has been bought <span class="badge badge-info">{{ product.product_buy }} time{{product.product_buy|pluralize}}</span> </h4>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-xl-12">
+                                                    <h5 class="float-right">Products in stock: <span class="badge {{ stock_color|default:'badge-secondary' }}">{{ product.product_stock }}</span></h5>
+                                                </div>
+                                            </div>
+                                            <br>
+                                        {% autoescape off %}
+                                        <p class="card-text">{{ product.product_description }}</p>
+                                        {% endautoescape %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                    <div class="alert alert-danger" role="alert">
+                        There is no products that are in this category!
+                    </div>
+                    {% endif %}
+                </div>
+{% endblock %}

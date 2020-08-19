@@ -1,0 +1,93 @@
+{% extends 'mainsite/base_template.html' %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+                <div class="col-6 mx-auto">
+                    {% if register_error == 'acc_exist' %}
+                    <p class="alert alert-danger">
+                        Account with this name already exist!
+                    </p>
+                    {% endif %}
+                    
+                    {% if can_register %}
+                    <!-- REGISTRATRION FORM -->
+                    <form class="needs-validation" action="" method="post">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <div class="row">
+                                <div class="col">
+                                    <label for="FirstNameInput">First name</label>
+                                    <input type="text" name="FirstNameInput" id="FirstNameInput" class="form-control" required="true">
+                                </div>
+                                <div class="col">
+                                    <label for="LastNameInput">Last name</label>
+                                    <input type="text" name="LastNameInput" id="LastNameInput" class="form-control" required="true">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="UsernameInput">Username</label>
+                            <input type="text" name="UsernameInput" id="UsernameInput" class="form-control" required="true">
+                        </div>
+                        <div class="form-group">
+                            <label for="EmailInput">Email address</label>
+                            <input type="email" name="EmailInput" id="EmailInput" class="form-control" required="true">
+                        </div>
+                        <div class="form-group">
+                            <label for="PasswordInput">Password</label>
+                            <input type="password" name="PasswordInput" id="PasswordInput" class="form-control" onkeyup="validate()" required="true">
+                        </div>
+                        <div class="form-group">
+                            <label for="RePasswordInput">Repeat password</label>
+                            <input type="password" name="PasswordInput" id="RePasswordInput" class="form-control" onkeyup="validate()" required="true">
+                        </div>
+                        <button id="RegisterButton" type="submit" class="btn btn-primary" disabled="true">Register account</button>
+                    </form>
+                    <!-- REGISTRATION FORM -->
+                    {% else %}
+                    <div class="alert alert-danger" role="alert">Registration has been turn off.</div>
+                    {% endif %}
+                </div>
+{% endblock %}
+
+{% block script-bottom %}
+    <script>
+        // (function () {
+        //     'use strict';
+        //     window.addEventListener('load', function() {
+
+        //         var forms = document.getElementsByClassName('needs-validation');
+
+        //         var validation = Array.prototype.filter.call(forms, function(form) {
+        //             form.addEventListener('submit', function(event) {
+        //                 if (form.checkValidity() === false) {
+        //                     event.preventDefault();
+        //                     event.stopPropagation();
+        //                 }
+        //                 form.classList.add('was-validated');
+        //             }, false);
+        //         });
+        //     }, false);
+        // })();
+        //Client-side validation
+        function validate()
+        {
+            re = new RegExp('^(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$', 'gm')
+            // REGEX
+            // ^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$
+            let form_password = document.getElementById('PasswordInput')
+            let form_repassword = document.getElementById('RePasswordInput')
+            let form_submit = document.getElementById('RegisterButton')
+
+
+            if(form_password.value.match(re) && (form_password.value === form_repassword.value))
+            {
+                form_submit.disabled = false;
+            }
+            else
+            {
+                form_submit.disabled = true;
+            }
+        }
+    </script>
+{% endblock %}

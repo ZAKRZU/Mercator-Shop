@@ -1,0 +1,88 @@
+{% extends 'mainsite/base_template.html' %}
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+<h1>Cart</h1>
+<div class="m-2 col-8 m-auto">
+    {% if cart_list == 'empty' %}
+    <h1 class="alert alert-danger text-center">Your cart is empty! <br><span class="text-muted h5">Or maybe Bubbles stealed it from you :&lt; </span></h1>
+    {% else %}
+    <table class="table border-bottom table-hover">
+        <thead class="thead-dark">
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Price</th>
+            <th scope="col">Quality</th>
+            <th scope="col">Options</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for product in cart_list %}
+          <tr>
+            <th scope="row">{{ product.cart_product.product_name }}</th>
+            <td>{{ product.cart_product.product_price }} zł</td>
+            <td><div class="input-group-sm">
+              <input type="number" class="form-control" style="width: 75px" name="cartquantity" id="cartquantity-{{ product.id }}" value="{{ product.cart_quantity}}" onchange="updateCart('{% url 'mainsite:cart-update' product.id %}', {{ product.id }})" min="1" max="{{ product.cart_product.product_stock }}">
+            </div></td>
+            <td><a class="btn btn-danger btn-sm" href="{% url 'mainsite:cart-del' product.id %}">DELETE</a></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <div>
+        <div class="col-2 float-right">
+          <button class="btn btn-primary mt-1 float-right" id="placeorder" onclick="order()">Place order</button>
+        </div>
+      </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block script-bottom %}
+<script>
+function updateCart(url, self)
+{ 
+  a = document.getElementById('cartquantity-'+self)
+  b = parseInt(a.max);
+  if (a.value <= 0 || a.value > b)
+  {
+    a.classList.add('border-danger')
+    return
+  }
+  else
+  {
+    a.classList.remove('border-danger')
+  }
+
+  token = document.getElementsByName('csrfmiddlewaretoken')[0]
+  console.log(a.value)
+  let data = {cart_quantity: a.value}
+  fetch(url, {
+    method: 'POST',
+    headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': token.value,
+    },
+    body: JSON.stringify(data)
+  }).then(res => {
+    console.log('Request sent '+token.value)
+    console.log('Status code: ' + res.status)
+  })
+}
+function order() {
+  a = document.getElementById('placeorder');
+  token = document.getElementsByName('csrfmiddlewaretoken')[0];
+    fetch("{% url 'mainsite:customer-orders' %}", {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': token.value
+      }
+    }).then(res => {
+      if (res.status == 200)
+      {
+        window.location.reload(true);
+      }
+    });
+}
+</script>
+{% endblock %}

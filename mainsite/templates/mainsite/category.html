@@ -1,0 +1,25 @@
+{% extends 'mainsite/base_template.html' %}
+{% block title %}Category{% endblock %}
+{% block content %}
+<h1>{{ current_category.category_name }}</h1>
+    <div class="col-md">
+        {% if product_list %}
+            {% load static %}
+            <div class="row">
+                {% for product in product_list %}
+                <div class="card shadow-sm float-left mr-sm-3 mt-sm-2" style="width: 18rem;">
+                    <img src="{% static 'mainsite/' %}{{ product.product_image }}" class="card-img-top" style="height: 150px;" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ product.product_name }}</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">{{ product.product_price }} zł</h6>
+                        <p class="card-text" style="height: 48px;">{{ product.product_description }}</p>
+                        <a href="{% url 'mainsite:product' product.id %}" class="btn btn-primary stretched-link">View product</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+        <h1 class="alert alert-danger text-center">There is no products in this category! <br><span class="text-muted h5"> :&lt; </span></h1>
+        {% endif %}
+    </div>
+{% endblock %}
