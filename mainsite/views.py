@@ -254,13 +254,13 @@ def orders(request):
     if request.method == 'POST':
         cart = models.Cart.objects.all().filter(cart_user=req_user)
         user = User.objects.get(pk=req_user.id)
-        order_new = models.Order(order_user=user, order_date=timezone.now(), order_status_id=1)
+        order_new = models.Order(user=user, date=timezone.now(), status_id=1)
         order_new.save()
         for item in cart:
             product = item.cart_product
             quantity = item.cart_quantity
             ordered_product = models.OrderedProduct(ordered_product=product, ordered_price=product.product_price, ordered_quantity=quantity, order_id=order_new)
-            order_new.order_cost = order_new.order_cost + (float(product.product_price) * int(quantity))
+            order_new.cost = order_new.cost + (float(product.product_price) * int(quantity))
             order_new.save()
             ordered_product.save()
         cart.delete()
@@ -271,11 +271,11 @@ def orders(request):
 
     corders = []
     try:
-        orders = models.Order.objects.all().filter(order_user=req_user)
+        orders = models.Order.objects.all().filter(user=req_user)
     except (KeyError, models.Order.DoesNotExist):
         corders = 'empty'
     
-    if len(orders) > 0: # nasty thing but for some reason 'if not orders' didn't work as expected (empty QueryDict)
+    if len(orders) > 0: 
         for act_order in orders:
             ord_prod = models.OrderedProduct.objects.all().filter(order_id=act_order)
             corder_new = CompleteOrder(act_order)
@@ -311,30 +311,76 @@ def order_process(request):
 
     return render(request, 'mainsite/order-address-form.html', context)
 
-def get_customer_addresses(customer):
-    customer_addresses = models.Address.objects.all().filter(user=customer)
-
-    ret_address = {'customer_addresses': customer_addresses}
-
-    return ret_address
-
+@login_required(login_url='/login/')
 def customer_settings(request, selected_setting):
     category_list = get_category_list()
     req_user = request.user
+    action = ''
+
+    if request.method == 'POST':
+        if request.POST.get('action') == 'updateAccountInfo':
+            post_data = request.POST
+            if post_data.get('firstName') != req_user.first_name:
+                req_user.first_name = post_data.get('firstName')
+                action = 'updateAccountInfo_success'
+
+            if post_data.get('lastName') != req_user.last_name:
+                req_user.last_name = post_data.get('lastName')
+                action = 'updateAccountInfo_success'
+
+            if post_data.get('email') != req_user.email:
+                req_user.email = post_data.get('email')
+                action = 'updateAccountInfo_success'
+            
+        if request.POST.get('action') == 'changePassword':
+            post_data = request.POST
+            if post_data.get('oldPassword') is not None and post_data.get('newPassword') is not None and post_data.get('confirmNewPassword') is not None:
+                if req_user.check_password(post_data.get('oldPassword')):
+                    if post_data.get('newPassword') == post_data.get('confirmNewPassword'):
+                        req_user.set_password(post_data.get('newPassword'))
+                        action = 'changePassword_success'
+                    else:
+                        action = 'changePassword_error'
+                else:
+                    action = 'changePassword_error'
+        req_user.save()     
+
+        if request.POST.get('action') == 'updateAddress':
+            try:
+                details = models.CustomerDetails.objects.get(user=req_user)
+            except (KeyError, models.CustomerDetails.DoesNotExist): 
+                details = models.CustomerDetails.objects.create_request_post(request)
+            else:
+                details.update_request_post(request)
+
     context = {
         'category_list': category_list,
         'req_user': req_user,
+        'action': action,
     }
+
+    if selected_setting == 'address':
+        try:
+            details = models.CustomerDetails.objects.get(user=req_user)
+        except (KeyError, models.CustomerDetails.DoesNotExist):
+            details = models.CustomerDetails.objects.create_empty(req_user)
+
+        context_address = {
+            'shipping_address': details.shipping_address,
+            'billing_address': details.billing_address,
+        }
+        context.update(context_address)
+
     settings_list = {
         'main': 'mainsite/customer-settings.html',
         'address': 'mainsite/customer-address.html',
     }
 
-    settings_context = {
-        'address': get_customer_addresses(req_user),
-    }
+    # settings_context = {
+    #     'address': get_customer_addresses(req_user),
+    # }
 
-    context.update(settings_context.get(selected_setting, ''))
+    # context.update(settings_context.get(selected_setting, ''))
 
     return render(request, settings_list.get(selected_setting, 'mainsite/customer-settings.html'), context)
 

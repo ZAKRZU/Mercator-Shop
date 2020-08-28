@@ -21,9 +21,9 @@
         {% for product in orders_list %}
           <tr>
             <th scope="row">{{ product.main_order.id }}</th>
-            <td>{{ product.main_order.order_cost }} zł</td>
-            <td>{{ product.main_order.order_date|date:"d-m-Y H:i" }}</td>
-            <td>{{ product.main_order.order_status }}</td>
+            <td>{{ product.main_order.cost }} zł</td>
+            <td>{{ product.main_order.date|date:"d-m-Y H:i" }}</td>
+            <td>{{ product.main_order.status }}</td>
             <!-- <td>{% for names in product.ordered_products %}{{ names }} {% endfor %}</td> -->
             <td><a href="#"><button class="btn btn-warning btn-sm" disabled>Download PDF</button></a></td>
           </tr>

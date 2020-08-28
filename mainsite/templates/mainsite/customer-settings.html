@@ -1,17 +1,102 @@
 {% extends 'mainsite/base_template.html' %}
-{% block title %}Order{% endblock %}
+{% block title %}Account Settings{% endblock %}
 
 {% block content %}
 <h1>Account Settings</h1>
-<div class="col-6 m-auto">
-    
+<div class="row m-auto px-5 pt-3">
+    <div class="col-2">
+        <div class="list-group">
+                <a href="" class="list-group-item list-group-item-action active">Account settings</a>
+                <a href="{% url 'mainsite:customer-setting' 'address' %}" class="list-group-item list-group-item-action">Address</a>
+        </div>
+    </div>
+    <div class="col-10">
+        <div class="col-8 m-auto">
+            {% if action == 'updateAccountInfo_success' %}
+            <div class="alert alert-success">
+                Your account details has been updated!
+            </div>
+            {% elif action == 'updateAccountInfo_error' %}
+            <div class="alert alert-danger">
+                Error occur when tried to update your account details, please check if you typed everything right!
+            </div>
+            {% endif %}
+            <form action="" method="POST">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-6 form-group">
+                        <label for="firstName">First Name:</label>
+                        <input type="text" name="firstName" id="firstName" class="form-control" value="{{ req_user.first_name }}">
+                    </div>
+                    <div class="col-6 form-group">
+                        <label for="lastName">Last Name:</label>
+                        <input type="text" name="lastName" id="lastName" class="form-control" value="{{ req_user.last_name }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="email">e-mail:</label>
+                    <input type="email" name="email" id="email" class="form-control" value="{{ req_user.email }}">
+                </div>
+                <div class="d-flex w-100 justify-content-end">
+                    <button class="btn btn-danger" type="submit" name="action" value="updateAccountInfo">Update account information</button>
+                </div>
+            </form>
+            {% if action == 'changePassword_success' %}
+            <div class="alert alert-success">
+                Your password has been updated!
+            </div>
+            {% elif action == 'changePassword_error' %}
+            <div class="alert alert-danger">
+                Error! Type again your current password and new password.
+            </div>
+            {% endif %}
+            <form action="" method="POST" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="mb-2">
+                    <div class="form-group">
+                        <label for="oldPassword">Old password:</label>
+                        <input type="password" name="oldPassword" id="oldPassword" class="form-control" required>
+                        <div class="invalid-feedback">
+                            Inapropriate password format!
+                        </div>
+                        <div class="valid-feedback">
+                            Dobrze
+                        </div>
+                    </div>
+                    <label for="newPassword">New password:</label>
+                    <input type="password" name="newPassword" id="newPassword" class="form-control" required>
+                    <div class="valid-feedback">
+                        Dobrze
+                    </div>
+                    <label for="confirmNewPassword">New password confirmation:</label>
+                    <input type="password" name="confirmNewPassword" id="confirmNewPassword" class="form-control" required>
+                </div>
+                <div class="d-flex w-100 justify-content-end">
+                    <button class="btn btn-danger" type="submit" name="action" value="changePassword">Change my password</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block script-bottom %}
 <script>
     window.onload = function() {
-        
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.getElementsByClassName('needs-validation');
+        // Loop over them and prevent submission
+        var validation = Array.prototype.filter.call(forms, function(form) {
+        form.addEventListener('submit', function(event) {
+            console.log('TEST');
+            if (form.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+        });
     }
+
 </script>
 {% endblock %}
