@@ -310,11 +310,11 @@
 
             <div class="row my-3">
                 <div class="form-check">
-                    <input type="radio" name="radio" id="sameAddress" checked>
+                    <input type="radio" name="radio" value="sameAddress" id="sameAddress" {% if not diffAddress %} checked {% endif %}>
                     <label for="sameAddress">Billing address is the same</label>
                 </div>
                 <div class="form-check">
-                    <input type="radio" name="radio" id="diffAddress" disabled>
+                    <input type="radio" name="radio" value="diffAddress" id="diffAddress" {% if diffAddress %} checked {% endif %}>
                     <label for="diffAddress">Billing address is different(not implemented properly)</label>
                 </div>
             </div>
@@ -324,11 +324,11 @@
                     <div class="form-row">
                         <div class="col-6">
                             <label for="">First Name:</label>
-                            <input class="form-control" type="text" name="diff_firstName" id="">
+                            <input class="form-control" type="text" name="diff_firstName" id="" value="{{ billing_address.first_name }}">
                         </div>
                         <div class="col-6">
                             <label for="">Last Name:</label>
-                            <input class="form-control" type="text" name="diff_lastName" id="">
+                            <input class="form-control" type="text" name="diff_lastName" id="" value="{{ billing_address.last_name }}">
                         </div>
                     </div>
                     <div class="form-row">
@@ -590,26 +590,26 @@
                                 </div>
                                 <div class="col-6">
                                     <label for="">Postal code</label>
-                                    <input class="form-control" type="text" name="diff_postalCode" id="">
+                                    <input class="form-control" type="text" name="diff_postalCode" id="" value="{{ billing_address.post_code }}">
                                 </div>
                             </div>
                         </div>
                         <div class="col-6">
                             <label for="">City</label>
-                            <input class="form-control" type="text" name="diff_city" id="">
+                            <input class="form-control" type="text" name="diff_city" id="" value="{{ billing_address.city }}">
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="">State</label>
-                        <input class="form-control" type="text" name="diff_state" id="">
+                        <input class="form-control" type="text" name="diff_state" id="" value="{{ billing_address.state }}">
                     </div>
                     <div class="form-group">
                         <label for="">Address</label>
-                        <input class="form-control" type="text" name="diff_address" id="">
+                        <input class="form-control" type="text" name="diff_address" id="" value="{{ billing_address.address }}">
                     </div>
                     <div class="form-group">
                         <label for="">Address 2</label>
-                        <input class="form-control" type="text" name="diff_address2" id="">
+                        <input class="form-control" type="text" name="diff_address2" id="" value="{{ billing_address.address2 }}">
                     </div>
                 </fieldset>
                 <button type="submit" class="btn btn-primary" name="action" value="updateAddress">Continue</button>
@@ -624,10 +624,30 @@
     window.onload = function() {
         $('#sameAddress').on('change', function () {
             $('#collapseExample').addClass('collapse');
+            change_form_attr();
         });
         $('#diffAddress').on('change', function () {
             $('#collapseExample').removeClass('collapse');
+            change_form_attr();
         });
+        if ($('#diffAddress:checked').length > 0) {
+            $('#collapseExample').removeClass('collapse');
+        } else {
+            $('#collapseExample').addClass('collapse');
+        }
+        $('fieldset :input').each(function () {
+            this.required = 'True';
+        });
+        function change_form_attr() {
+            $('#collapseExample :input').each(function () {
+                if (!$('#diffAddress').is(':checked')) {
+                    this.required = '';
+                } else {
+                    this.required = 'True';
+                }
+            })
+        }
+        change_form_attr();
     }
 </script>
 {% endblock %}

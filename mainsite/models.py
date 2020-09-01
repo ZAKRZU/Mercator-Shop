@@ -19,40 +19,38 @@ class CustomerDetailsManager(models.Manager):
             billing_address = shipping_address
 
         customer_details = CustomerDetails(user=user, shipping_address=shipping_address, different_billing_address=different, billing_address=billing_address)
-        customer_details.save()
 
         return customer_details
 
     def create_request_post(self, request):
         shipping_address = Address.objects.create_address(
-            first_name=request.POST.get('firstName'),
-            last_name=request.POST.get('lastName'),
-            country=request.POST.get('country'),
-            city=request.POST.get('city'),
-            address=request.POST.get('address'),
-            address2=request.POST.get('address2'),
-            post_code=request.POST.get('postalCode'),
-            state=request.POST.get('state')
+                first_name = request.POST.get('firstName'),
+                last_name = request.POST.get('lastName'),
+                country = request.POST.get('country'),
+                city = request.POST.get('city'),
+                address = request.POST.get('address'),
+                address2 = request.POST.get('address2'),
+                post_code = request.POST.get('postalCode'),
+                state = request.POST.get('state'),
             )
         shipping_address.save()
 
         if request.POST.get('radio') == 'diffAddress':
             billing_address = Address.objects.create_address(
-                first_name=request.POST.get('diff_firstName'),
-                last_name=request.POST.get('diff_lastName'),
-                country=request.POST.get('diff_country'),
-                city=request.POST.get('diff_city'),
-                address=request.POST.get('diff_address'),
-                address2=request.POST.get('diff_address2'),
-                post_code=request.POST.get('diff_postalCode'),
-                state=request.POST.get('diff_state')
+                    first_name = request.POST.get('diff_firstName'),
+                    last_name = request.POST.get('diff_lastName'),
+                    country = request.POST.get('diff_country'),
+                    city = request.POST.get('diff_city'),
+                    address = request.POST.get('diff_address'),
+                    address2 = request.POST.get('diff_address2'),
+                    post_code = request.POST.get('diff_postalCode'),
+                    state = request.POST.get('diff_state'),
                 )
             billing_address.save()
         else:
             billing_address = shipping_address
 
         customer_details = CustomerDetails(user=request.user, shipping_address=shipping_address, different_billing_address=(True if request.POST.get('radio') == 'diffAddress' else False), billing_address=billing_address)
-        customer_details.save()
 
         return customer_details
 
@@ -102,25 +100,38 @@ class CustomerDetails(models.Model):
         self.shipping_address.state = request.POST.get('state')
         self.shipping_address.save()
 
+
+        old_diff_bill_add = self.different_billing_address
         self.different_billing_address = (True if request.POST.get('radio') == 'diffAddress' else False)
 
-
-        #TODO(zakrzu): make different billing address working
-        """
-        When defined that user will use different address it should create new object and fill it
-        but when user decide that he will use the same address then it should delete this object
-        and override value with shipping_address
-        """
         if self.different_billing_address:
-            self.billing_address.first_name = request.POST.get('diff_firstName')
-            self.billing_address.last_name = request.POST.get('diff_lastName')
-            self.billing_address.country = request.POST.get('diff_country')
-            self.billing_address.city = request.POST.get('diff_city')
-            self.billing_address.address = request.POST.get('diff_address')
-            self.billing_address.address2 = request.POST.get('diff_address2')
-            self.billing_address.post_code = request.POST.get('diff_postalCode')
-            self.billing_address.state = request.POST.get('diff_state')
-            self.billing_address.save()
+            if not old_diff_bill_add:
+                self.billing_address = Address.objects.create_address(
+                    first_name = request.POST.get('diff_firstName'),
+                    last_name = request.POST.get('diff_lastName'),
+                    country = request.POST.get('diff_country'),
+                    city = request.POST.get('diff_city'),
+                    address = request.POST.get('diff_address'),
+                    address2 = request.POST.get('diff_address2'),
+                    post_code = request.POST.get('diff_postalCode'),
+                    state = request.POST.get('diff_state'),
+                )
+                self.billing_address.save()
+            else:
+                self.billing_address.first_name = request.POST.get('diff_firstName')
+                self.billing_address.last_name = request.POST.get('diff_lastName')
+                self.billing_address.country = request.POST.get('diff_country')
+                self.billing_address.city = request.POST.get('diff_city')
+                self.billing_address.address = request.POST.get('diff_address')
+                self.billing_address.address2 = request.POST.get('diff_address2')
+                self.billing_address.post_code = request.POST.get('diff_postalCode')
+                self.billing_address.state = request.POST.get('diff_state')
+                self.billing_address.save()
+        else:
+            if old_diff_bill_add:
+                self.billing_address.delete()
+                self.billing_address = self.shipping_address
+                self.billing_address.save()
 
         return True
 

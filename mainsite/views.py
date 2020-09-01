@@ -130,6 +130,8 @@ def register(request):
             register_error = 'acc_exist'
         else:
             logger.info('%s' % (user))
+            details = models.CustomerDetails.objects.create_empty(user)
+            details.save()
 
     context = {
         'category_list': category_list,
@@ -350,8 +352,10 @@ def customer_settings(request, selected_setting):
                 details = models.CustomerDetails.objects.get(user=req_user)
             except (KeyError, models.CustomerDetails.DoesNotExist): 
                 details = models.CustomerDetails.objects.create_request_post(request)
+                details.save()
             else:
                 details.update_request_post(request)
+                details.save()
 
     context = {
         'category_list': category_list,
@@ -364,10 +368,12 @@ def customer_settings(request, selected_setting):
             details = models.CustomerDetails.objects.get(user=req_user)
         except (KeyError, models.CustomerDetails.DoesNotExist):
             details = models.CustomerDetails.objects.create_empty(req_user)
+            details.save()
 
         context_address = {
             'shipping_address': details.shipping_address,
-            'billing_address': details.billing_address,
+            'billing_address': details.billing_address if details.billing_address != details.shipping_address else None,
+            'diffAddress': details.different_billing_address,
         }
         context.update(context_address)
 
