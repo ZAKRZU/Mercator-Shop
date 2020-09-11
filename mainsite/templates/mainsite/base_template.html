@@ -27,24 +27,24 @@
                     {% for category in category_list %}
                         {% if category.child_categories %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="{% url 'mainsite:category' category.parrent_category.category_urlname %}" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {{ category.parrent_category.category_name }}
+                            <a class="nav-link dropdown-toggle" href="{% url 'mainsite:category' category.parrent_category.urlname %}" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                {{ category.parrent_category.name }}
                             </a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                                 {% for subcategory in category.child_categories %}
                                 {% if current_category == subcategory %}
-                                <a class="dropdown-item active" href="{% url 'mainsite:category' subcategory.category_urlname %}">{{ subcategory.category_name }}</a>
+                                <a class="dropdown-item active" href="{% url 'mainsite:category' subcategory.urlname %}">{{ subcategory.name }}</a>
                                 {% else %}
-                                <a class="dropdown-item" href="{% url 'mainsite:category' subcategory.category_urlname %}">{{ subcategory.category_name }}</a>
+                                <a class="dropdown-item" href="{% url 'mainsite:category' subcategory.urlname %}">{{ subcategory.name }}</a>
                                 {% endif %}
                                 {% endfor %}
                             </div>
                         </li>
                         {% else %}
                         {% if current_category == category.parrent_category %}
-                        <li class="nav-item active"><a href="{% url 'mainsite:category' category.parrent_category.category_urlname %}" class="nav-link">{{ category.parrent_category.category_name }}</a></li>
+                        <li class="nav-item active"><a href="{% url 'mainsite:category' category.parrent_category.urlname %}" class="nav-link">{{ category.parrent_category.name }}</a></li>
                         {% else %}
-                        <li class="nav-item"><a href="{% url 'mainsite:category' category.parrent_category.category_urlname %}" class="nav-link">{{ category.parrent_category.category_name }}</a></li>
+                        <li class="nav-item"><a href="{% url 'mainsite:category' category.parrent_category.urlname %}" class="nav-link">{{ category.parrent_category.name }}</a></li>
                         {% endif %}
                         {% endif %}
                     {% endfor %}

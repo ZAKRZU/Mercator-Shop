@@ -4,7 +4,9 @@ from . import views
 
 app_name = 'mainsite'
 urlpatterns = [
-    path('', views.index, name='index'),
+    path('', views.IndexView.as_view(), name='index'),
+    path('logout/', views.login_form, name='logout'),
+
     path('category/<str:cate_urlname>/', views.category, name='category'),
     re_path(r'^product\/(?:.*)\-(.+)\/$', views.product, name='product'),
     path('register/', views.register, name='register'),

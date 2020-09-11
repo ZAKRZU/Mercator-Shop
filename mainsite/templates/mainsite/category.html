@@ -1,7 +1,7 @@
 {% extends 'mainsite/base_template.html' %}
 {% block title %}Category{% endblock %}
 {% block content %}
-<h1>{{ current_category.category_name }}</h1>
+<h1>{{ current_category.name }}</h1>
     <div class="col-md">
         {% if product_list %}
             {% load static %}

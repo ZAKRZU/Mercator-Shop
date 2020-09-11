@@ -1,5 +1,8 @@
+import json
+import logging
+
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -7,14 +10,41 @@ from django.db import IntegrityError
 from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils import timezone
-import json
-
-import logging
+from django.views.generic import View
+#from django.views.generic.base import TemplateView
 
 from . import models
 
 logger = logging.getLogger("mylogger")
 
+loginMessages = {
+    '2': 'You has been logged succesfully'
+}
+
+class ShopView(View):
+    context = {}
+    def get(self, request):
+        self.context['user'] = request.user
+        return render(request, 'store/base.html', self.context)
+
+class IndexView(ShopView):
+    template_name = 'store/index.html'
+
+    def get(self, request):
+        self.context['categories'] = models.Category.objects.get_categories()
+        self.context['products'] = models.Product.objects.all()[:30]
+        if loginMessages.get(request.GET.get('action')):
+            self.context['action'] = loginMessages[request.GET.get('action')]
+        #self.context['action'] = request.GET.get('action')
+
+        return render(request, self.template_name, self.context)
+
+class AccountView(View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            logout(request)
+        else:
+            pass
 
 class CompleteCategory():
     def __init__(self, parrent_category):
@@ -29,12 +59,12 @@ class CompleteCategory():
 
 
 def get_category_list():
-    all_categories = models.Category.objects.all().filter(category_parentId=0)
+    all_categories = models.Category.objects.all().filter(parentId=0)
     ret_category_list = []
 
     for category in all_categories:
         complete_category = CompleteCategory(category)
-        child_categories = models.Category.objects.all().filter(category_parentId=category.id)
+        child_categories = models.Category.objects.all().filter(parentId=category.id)
         # holecategory.sub_categories = sub_categories
         complete_category.setSubCategoryList(child_categories)
         ret_category_list.append(complete_category)
@@ -50,7 +80,7 @@ def index(request):
 
     if request.GET.get('action'):
         action = request.GET.get('action')
-    
+
     context = {
         'product_list': product_list,
         'category_list': category_list,
@@ -64,7 +94,7 @@ def category(request, cate_urlname):
     req_user = request.user
 
     try:
-        current_category = models.Category.objects.get(category_urlname=cate_urlname)
+        current_category = models.Category.objects.get(urlname=cate_urlname)
     except (KeyError, models.Category.DoesNotExist):
         return HttpResponseRedirect('/')
     product_list = models.Product.objects.filter(product_category=current_category)
@@ -81,30 +111,34 @@ def category(request, cate_urlname):
 def product(request, prod_id):
     category_list = get_category_list()
     req_user = request.user
-    
+
     try:
         selected_product = models.Product.objects.get(pk=prod_id)
     except (KeyError, models.Product.DoesNotExist):
-        return render(request, 'mainsite/product.html', {'category_list': category_list, 'req_user': req_user})
-    
+        return render(
+            request,
+            'mainsite/product.html',
+            {'category_list': category_list, 'req_user': req_user}
+            )
+
     if selected_product.product_stock < 10:
         stock_color = 'badge-danger'
     elif selected_product.product_stock < 20:
         stock_color = 'badge-warning'
     else:
         stock_color = 'badge-success'
-    
-    url_product_name = selected_product.product_name.replace(' ','-')
+
+    url_product_name = selected_product.product_name.replace(' ', '-')
 
     if not url_product_name in request.path:
         url_product_name = '%s-%i' % (url_product_name, selected_product.id)
         return HttpResponseRedirect('/product/%s/' % url_product_name)
-    
+
     context = {
         'product': selected_product,
         'category_list': category_list,
         'stock_color': stock_color,
-        'req_user':req_user, 
+        'req_user':req_user,
         }
     return render(request, 'mainsite/product.html', context)
 
@@ -123,13 +157,19 @@ def register(request):
         account_firstname = request.POST.get('FirstNameInput')
         account_lastname = request.POST.get('LastNameInput')
         account_email = request.POST.get('EmailInput')
-        
+
         try:
-            user = User.objects.create_user(username=account_login, password=account_password, first_name=account_firstname, last_name=account_lastname, email=account_email)
-        except (IntegrityError):
+            user = User.objects.create_user(
+                username=account_login,
+                password=account_password,
+                first_name=account_firstname,
+                last_name=account_lastname,
+                email=account_email,
+                )
+        except IntegrityError:
             register_error = 'acc_exist'
         else:
-            logger.info('%s' % (user))
+            logger.info('%s', (user))
             details = models.CustomerDetails.objects.create_empty(user)
             details.save()
 
@@ -183,7 +223,7 @@ def cart_check(request):
         cart_list = models.Cart.objects.all().filter(cart_user=request.user)
     except (KeyError, models.Cart.DoesNotExist, TypeError):
         cart_list = 'empty'
-    
+
     if not cart_list:
         cart_list = 'empty'
     req_user = request.user
@@ -233,7 +273,7 @@ def cart_update(request, prod_id):
         get_product = models.Product.objects.get(pk=get_cart.cart_product.id)
     except (KeyError, models.Cart.DoesNotExist):
         return response
-    
+
     if int(quantity) <= 0 or int(quantity) > int(get_product.product_stock):
         response.status_code = 403
         return response
@@ -261,7 +301,12 @@ def orders(request):
         for item in cart:
             product = item.cart_product
             quantity = item.cart_quantity
-            ordered_product = models.OrderedProduct(ordered_product=product, ordered_price=product.product_price, ordered_quantity=quantity, order_id=order_new)
+            ordered_product = models.OrderedProduct(
+                ordered_product=product,
+                ordered_price=product.product_price,
+                ordered_quantity=quantity,
+                order_id=order_new
+                )
             order_new.cost = order_new.cost + (float(product.product_price) * int(quantity))
             order_new.save()
             ordered_product.save()
@@ -269,15 +314,15 @@ def orders(request):
         response = HttpResponse()
         response.status_code = 200
         return response
-    
+
 
     corders = []
     try:
         orders = models.Order.objects.all().filter(user=req_user)
     except (KeyError, models.Order.DoesNotExist):
         corders = 'empty'
-    
-    if len(orders) > 0: 
+
+    if len(orders) > 0:
         for act_order in orders:
             ord_prod = models.OrderedProduct.objects.all().filter(order_id=act_order)
             corder_new = CompleteOrder(act_order)
@@ -309,7 +354,7 @@ def order_process(request):
         if request.POST.items():
             logger.info(request.POST)
         return render(request, 'mainsite/order-complete.html', context)
-        
+
 
     return render(request, 'mainsite/order-address-form.html', context)
 
@@ -333,10 +378,12 @@ def customer_settings(request, selected_setting):
             if post_data.get('email') != req_user.email:
                 req_user.email = post_data.get('email')
                 action = 'updateAccountInfo_success'
-            
+
         if request.POST.get('action') == 'changePassword':
             post_data = request.POST
-            if post_data.get('oldPassword') is not None and post_data.get('newPassword') is not None and post_data.get('confirmNewPassword') is not None:
+            if (post_data.get('oldPassword') is not None and
+                    post_data.get('newPassword') is not None and
+                    post_data.get('confirmNewPassword') is not None):
                 if req_user.check_password(post_data.get('oldPassword')):
                     if post_data.get('newPassword') == post_data.get('confirmNewPassword'):
                         req_user.set_password(post_data.get('newPassword'))
@@ -345,12 +392,12 @@ def customer_settings(request, selected_setting):
                         action = 'changePassword_error'
                 else:
                     action = 'changePassword_error'
-        req_user.save()     
+        req_user.save()
 
         if request.POST.get('action') == 'updateAddress':
             try:
                 details = models.CustomerDetails.objects.get(user=req_user)
-            except (KeyError, models.CustomerDetails.DoesNotExist): 
+            except (KeyError, models.CustomerDetails.DoesNotExist):
                 details = models.CustomerDetails.objects.create_request_post(request)
                 details.save()
             else:
@@ -372,7 +419,9 @@ def customer_settings(request, selected_setting):
 
         context_address = {
             'shipping_address': details.shipping_address,
-            'billing_address': details.billing_address if details.billing_address != details.shipping_address else None,
+            'billing_address': (details.billing_address
+                                if details.billing_address != details.shipping_address
+                                else None),
             'diffAddress': details.different_billing_address,
         }
         context.update(context_address)
@@ -388,7 +437,11 @@ def customer_settings(request, selected_setting):
 
     # context.update(settings_context.get(selected_setting, ''))
 
-    return render(request, settings_list.get(selected_setting, 'mainsite/customer-settings.html'), context)
+    return render(
+        request,
+        settings_list.get(selected_setting, 'mainsite/customer-settings.html'),
+        context
+        )
 
 def test_template(request):
     category_list = get_category_list()

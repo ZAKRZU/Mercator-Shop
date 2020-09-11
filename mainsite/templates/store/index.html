@@ -1,0 +1,48 @@
+{% extends 'store/base.html' %}
+{% block title %}Index{% endblock %}
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <h3>Categories</h3>
+            <div class="list-group">
+                {% for category in categories %}
+                    {% if category.childrens %}
+                    <div class="list-group-item list-group-item-action dropdown  dropright">
+                        <a href="{% url 'mainsite:category' category.parrent %}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ category.parrent }}</a>
+                        <div class="dropdown-menu">
+                            {% for child in category.childrens %}
+                            <a href="{% url 'mainsite:category' child.urlname %}" class="dropdown-item">{{ child }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item list-group-item-action">
+                        <a href="" class="">{{ category.parrent }}</a>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col">
+            <div class="row">
+                {% load static %}
+                {% for product in products %}
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img src="{% static 'mainsite/' %}{{ product.product_image }}" class="card-img-top" alt="...">
+                        <div class="card-body">
+                          <h5 class="card-title">{{ product }}</h5>
+                          <p class="card-text overflow-hidden" style="height: 48px;">{{ product.product_description }}</p>
+                          <a href="#" class="btn btn-primary">Go somewhere</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,19 +1,34 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
+###############
+
+
+#  MANAGERS
+
+
+###############
+class CategoryManager(models.Manager):
+    def get_categories(self):
+        categories = []
+        for category in self.all().filter(parentId=0):
+            categories.append(category.get_with_childrens())
+        return categories
+
 class AddressManager(models.Manager):
     def create_address(self, first_name, last_name, country='PL', city='', address='', address2='', post_code='', state=''):
         address = Address(first_name=first_name, last_name=last_name, country=country, city=city, address=address, address2=address2, post_code=post_code, state=state)
-        
+
         return address
 
 class CustomerDetailsManager(models.Manager):
     def create_empty(self, user, different=False):
-        shipping_address = Address.objects.create_address(user.first_name, user.last_name)
+        shipping_address = self.create_address(user.first_name, user.last_name)
         shipping_address.save()
-        
+
         if different:
-            billing_address = Address.objects.create_address(user.first_name, user.last_name)
+            billing_address = self.create_address(user.first_name, user.last_name)
             billing_address.save()
         else:
             billing_address = shipping_address
@@ -23,28 +38,28 @@ class CustomerDetailsManager(models.Manager):
         return customer_details
 
     def create_request_post(self, request):
-        shipping_address = Address.objects.create_address(
-                first_name = request.POST.get('firstName'),
-                last_name = request.POST.get('lastName'),
-                country = request.POST.get('country'),
-                city = request.POST.get('city'),
-                address = request.POST.get('address'),
-                address2 = request.POST.get('address2'),
-                post_code = request.POST.get('postalCode'),
-                state = request.POST.get('state'),
+        shipping_address = self.create_address(
+            first_name=request.POST.get('firstName'),
+            last_name=request.POST.get('lastName'),
+            country=request.POST.get('country'),
+            city=request.POST.get('city'),
+            address=request.POST.get('address'),
+            address2=request.POST.get('address2'),
+            post_code=request.POST.get('postalCode'),
+            state=request.POST.get('state'),
             )
         shipping_address.save()
 
         if request.POST.get('radio') == 'diffAddress':
-            billing_address = Address.objects.create_address(
-                    first_name = request.POST.get('diff_firstName'),
-                    last_name = request.POST.get('diff_lastName'),
-                    country = request.POST.get('diff_country'),
-                    city = request.POST.get('diff_city'),
-                    address = request.POST.get('diff_address'),
-                    address2 = request.POST.get('diff_address2'),
-                    post_code = request.POST.get('diff_postalCode'),
-                    state = request.POST.get('diff_state'),
+            billing_address = self.create_address(
+                first_name=request.POST.get('diff_firstName'),
+                last_name=request.POST.get('diff_lastName'),
+                country=request.POST.get('diff_country'),
+                city=request.POST.get('diff_city'),
+                address=request.POST.get('diff_address'),
+                address2=request.POST.get('diff_address2'),
+                post_code=request.POST.get('diff_postalCode'),
+                state=request.POST.get('diff_state'),
                 )
             billing_address.save()
         else:
@@ -54,7 +69,29 @@ class CustomerDetailsManager(models.Manager):
 
         return customer_details
 
-    
+###############
+
+
+#  MODELS
+
+
+###############
+class Category(models.Model):
+    urlname = models.CharField(max_length=200)
+    name = models.CharField(max_length=200)
+    description = models.TextField(max_length=1000)
+    parentId = models.PositiveIntegerField(default=0)
+
+    objects = CategoryManager()
+
+    def __str__(self):
+        return self.name
+
+    def get_with_childrens(self):
+        return {
+            'parrent': self,
+            'childrens': Category.objects.all().filter(parentId=self.id)
+            }
 
 class Address(models.Model):
     first_name = models.CharField(max_length=255)
@@ -66,7 +103,7 @@ class Address(models.Model):
     post_code = models.CharField(max_length=255)
     state = models.CharField(max_length=255)
 
-    def update_from_POST(self, address, request):
+    def update_from_POST(self, request):
         self.first_name = request.POST.get('firstName')
         self.last_name = request.POST.get('lastName')
         self.country = request.POST.get('country')
@@ -135,14 +172,6 @@ class CustomerDetails(models.Model):
 
         return True
 
-class Category(models.Model):
-    category_urlname = models.CharField(max_length=200)
-    category_name = models.CharField(max_length=200)
-    category_description = models.TextField(max_length=1000)
-    category_parentId = models.PositiveIntegerField(default=0)
-    def __str__(self):
-        return self.category_name
-
 class Product(models.Model):
     product_name = models.CharField(max_length=255)
     product_description = models.TextField(max_length=1000)
@@ -183,5 +212,4 @@ class OrderedProduct(models.Model):
     ordered_product = models.ForeignKey(Product, on_delete=models.CASCADE)
     ordered_price = models.FloatField(default=0.0)
     ordered_quantity = models.IntegerField(default=1)
-    
-    
+
