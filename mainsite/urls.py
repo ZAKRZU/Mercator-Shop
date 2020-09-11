@@ -5,7 +5,8 @@ from . import views
 app_name = 'mainsite'
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
-    path('logout/', views.login_form, name='logout'),
+    path('logout/', views.logout_view, name='logout'),
+    path('account/', views.AccountView.as_view(), name='account'),
 
     path('category/<str:cate_urlname>/', views.category, name='category'),
     re_path(r'^product\/(?:.*)\-(.+)\/$', views.product, name='product'),

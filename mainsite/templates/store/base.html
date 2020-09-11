@@ -10,7 +10,7 @@
 <body class="bg-light">
     <nav class="navbar navbar-expand-md navbar-light bg-white border-bottom mb-4">
         <div class="container d-flex justify-content-center">
-            <a href="" class="navbar-brand">BrandName</a>
+            <a href="{% url 'mainsite:index' %}" class="navbar-brand">BrandName</a>
             <form action="" class="form-inline w-100">
                 <div class="input-group flex-fill">
                     <input type="search" name="" id="" class="form-control">
@@ -34,7 +34,7 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-dark" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{{ user.first_name }} {{ user.last_name }}</a>
                     <div class="dropdown-menu">
-                      <a class="dropdown-item" href="#">Action</a>
+                      <a class="dropdown-item" href="{% url 'mainsite:account' %}">Settings</a>
                       <a class="dropdown-item" href="#">Another action</a>
                       <a class="dropdown-item" href="#">Something else here</a>
                       <div class="dropdown-divider"></div>
@@ -49,9 +49,9 @@
         </div>
     </nav>
     {% if action %}
-    <div class="alert alert-success">
+    <div class="alert alert-{{action.type}}">
         <div class="container">
-            {{action}}
+            {{action.info}}
         </div>
     </div>
     {% endif %}

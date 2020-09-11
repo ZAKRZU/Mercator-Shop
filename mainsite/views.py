@@ -11,40 +11,68 @@ from django.urls import reverse
 from django.utils.http import urlencode
 from django.utils import timezone
 from django.views.generic import View
-#from django.views.generic.base import TemplateView
+from django.views.generic.base import TemplateView
 
 from . import models
 
 logger = logging.getLogger("mylogger")
 
-loginMessages = {
-    '2': 'You has been logged succesfully'
-}
 
-class ShopView(View):
-    context = {}
-    def get(self, request):
-        self.context['user'] = request.user
-        return render(request, 'store/base.html', self.context)
-
-class IndexView(ShopView):
+class IndexView(TemplateView):
     template_name = 'store/index.html'
 
-    def get(self, request):
-        self.context['categories'] = models.Category.objects.get_categories()
-        self.context['products'] = models.Product.objects.all()[:30]
-        if loginMessages.get(request.GET.get('action')):
-            self.context['action'] = loginMessages[request.GET.get('action')]
-        #self.context['action'] = request.GET.get('action')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = models.Category.objects.get_categories()
+        context['products'] = models.Product.objects.all()[:30]
 
-        return render(request, self.template_name, self.context)
+        return context
+def logout_view(request):
+    if request.user.is_authenticated:
+        logout(request)
+    return HttpResponseRedirect(reverse('mainsite:index'))
 
 class AccountView(View):
+    template_name = 'store/account/index.html'
+
+    @staticmethod
+    def validate_password(new_password, confirm_password):
+        validated = bool(new_password == confirm_password)
+        if validated:
+            validated = len(new_password) > 8
+        return validated
+
     def get(self, request):
-        if request.user.is_authenticated:
-            logout(request)
-        else:
-            pass
+        return render(request, self.template_name)
+
+    def post(self, request):
+        context = {}
+        user = request.user
+        post = request.POST
+        if post.get('formAction') == 'update_details':
+            user.first_name = post.get('first_name')
+            user.last_name = post.get('last_name')
+            user.email = post.get('email')
+            user.save()
+            context['action'] = {'type':'success', 'info':'Details updated!'}
+            return render(request, self.template_name, context)
+
+        if post.get('formAction') == 'change_password':
+            if user.check_password(post.get('inputCurrentPassword')):
+                if self.validate_password(post.get('inputNewPassword'),
+                                          post.get('inputConfirmPassword')):
+                    user.set_password(post.get('inputNewPassword'))
+                    context['action'] = {'type':'success', 'info':'Password updated!'}
+                else:
+                    context['action'] = {'type':'danger', 'info':'Different passwords!'}
+            else:
+                context['action'] = {'type':'danger', 'info':'Error occured!'}
+
+            user.save()
+
+            return render(request, self.template_name, context)
+
+        return HttpResponseRedirect(reverse('mainsite:account'))
 
 class CompleteCategory():
     def __init__(self, parrent_category):

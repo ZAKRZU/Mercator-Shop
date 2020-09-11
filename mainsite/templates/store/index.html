@@ -31,7 +31,7 @@
                 {% for product in products %}
                 <div class="col-md-4">
                     <div class="card mb-4 shadow-sm">
-                        <img src="{% static 'mainsite/' %}{{ product.product_image }}" class="card-img-top" alt="...">
+                        <img src="{% static 'mainsite/' %}{{ product.product_image }}" class="card-img-top" alt="{{ product.product_image }}">
                         <div class="card-body">
                           <h5 class="card-title">{{ product }}</h5>
                           <p class="card-text overflow-hidden" style="height: 48px;">{{ product.product_description }}</p>
